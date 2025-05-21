@@ -3,60 +3,53 @@ import { Image as ImageIcon, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '../../components/Button'
 import type { CaseStudy } from '../../types'
 import { projectsApi } from '../../api/projects'
+import { Link, useNavigate } from 'react-router-dom'
 
 export function DashboardProjects() {
   const [projects, setProjects] = useState<CaseStudy[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedProject, setSelectedProject] = useState<CaseStudy | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    fetchProjects()
+    fetchData()
   }, [])
 
-  const fetchProjects = async () => {
+  const fetchData = async () => {
     try {
-      const data = await projectsApi.getAll()
-      setProjects(data['hydra:member'] || [])
+      const projectsData = await projectsApi.getAll()
+      setProjects(projectsData['hydra:member'] || [])
     } catch (err) {
-      setError('Erreur lors du chargement des projets')
+      setError('Une erreur est survenue lors du chargement des données')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const formData = new FormData(form)
-
-    try {
-      if (selectedProject) {
-        await projectsApi.update(selectedProject.id, Object.fromEntries(formData))
-      } else {
-        await projectsApi.create(Object.fromEntries(formData))
-      }
-      await fetchProjects()
-      setIsModalOpen(false)
-    } catch (err) {
-      setError('Erreur lors de la sauvegarde du projet')
-    }
-  }
-
   const handleDelete = async (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
-      try {
-        await projectsApi.delete(id)
-        await fetchProjects()
-      } catch (err) {
-        setError('Erreur lors de la suppression du projet')
-      }
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) return
+
+    setIsUpdating(true)
+    try {
+      await projectsApi.delete(id)
+      await fetchData()
+    } catch (err) {
+      setError('Une erreur est survenue lors de la suppression')
+    } finally {
+      setIsUpdating(false)
     }
   }
 
   if (isLoading) {
-    return <div>Chargement...</div>
+    return (
+      <div className="flex h-[calc(100vh-6rem)] items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
+          <p className="text-gray-600">Chargement des projets...</p>
+        </div>
+      </div>
+    )
   }
 
   if (error) {
@@ -68,15 +61,15 @@ export function DashboardProjects() {
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Gestion des projets</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Gestion des projets</h1>
+          <p className="mt-1 text-sm text-gray-500">{projects.length} projets au total</p>
+        </div>
         <Button
           variant="primary"
           size="md"
           icon={Plus}
-          onClick={() => {
-            setSelectedProject(null)
-            setIsModalOpen(true)
-          }}
+          onClick={() => navigate('/dashboard/projects/new')}
         >
           Nouveau projet
         </Button>
@@ -106,7 +99,7 @@ export function DashboardProjects() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {projects.map((project) => (
-                <tr key={project.id}>
+                <tr key={project.id} className="hover:bg-gray-50">
                   <td className="whitespace-nowrap px-6 py-4">
                     <div className="h-12 w-12 overflow-hidden rounded-lg">
                       <img
@@ -125,15 +118,14 @@ export function DashboardProjects() {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedProject(project)
-                          setIsModalOpen(true)
-                        }}
-                        className="p-2 text-gray-600 transition-colors hover:text-primary-600"
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={Pencil}
+                        onClick={() => navigate(`/dashboard/projects/${project.id}`)}
                       >
-                        <Pencil className="h-4 w-4" />
-                      </button>
+                        Modifier
+                      </Button>
                       <button
                         onClick={() => handleDelete(project.id)}
                         className="p-2 text-gray-600 transition-colors hover:text-red-600"
@@ -148,93 +140,6 @@ export function DashboardProjects() {
           </table>
         </div>
       </div>
-
-      {/* Project Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-2xl rounded-xl bg-white p-6">
-            <h2 className="mb-6 text-xl font-bold text-gray-900">
-              {selectedProject ? 'Modifier le projet' : 'Nouveau projet'}
-            </h2>
-
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Titre</label>
-                  <input
-                    type="text"
-                    name="title"
-                    className="w-full rounded-lg border px-4 py-2"
-                    defaultValue={selectedProject?.title}
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Client</label>
-                  <input
-                    type="text"
-                    name="client"
-                    className="w-full rounded-lg border px-4 py-2"
-                    defaultValue={selectedProject?.client?.name}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  name="description"
-                  className="w-full rounded-lg border px-4 py-2"
-                  rows={4}
-                  defaultValue={selectedProject?.description}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Catégorie</label>
-                  <select
-                    name="category"
-                    className="w-full rounded-lg border px-4 py-2"
-                    defaultValue={selectedProject?.category}
-                  >
-                    <option>Design</option>
-                    <option>Photo</option>
-                    <option>Vidéo</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Image</label>
-                  <div className="flex items-center gap-4">
-                    {selectedProject?.image && (
-                      <img
-                        src={selectedProject.image}
-                        alt=""
-                        className="h-12 w-12 rounded-lg object-cover"
-                      />
-                    )}
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 rounded-lg border px-4 py-2 hover:bg-gray-50"
-                    >
-                      <ImageIcon className="h-4 w-4" />
-                      Choisir une image
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-4 pt-4">
-                <Button variant="ghost" size="md" onClick={() => setIsModalOpen(false)}>
-                  Annuler
-                </Button>
-                <Button variant="primary" size="md" type="submit">
-                  {selectedProject ? 'Mettre à jour' : 'Créer'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

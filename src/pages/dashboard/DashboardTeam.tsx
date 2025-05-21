@@ -1,189 +1,233 @@
-import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Camera, Code, Palette, Briefcase, BarChart3, Target, PenTool } from 'lucide-react';
-import { Button } from '../../components/Button';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  image: string;
-  icon: string;
-  description: string;
-}
-
-const teamMembers: TeamMember[] = [
-  {
-    id: '1',
-    name: 'Yannick Ilunga',
-    role: 'Directeur Général',
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80',
-    icon: 'Target',
-    description: 'Expert en stratégie de communication avec plus de 7 ans d\'expérience.'
-  },
-  {
-    id: '2',
-    name: 'Sarah Mutombo',
-    role: 'Directrice Artistique',
-    image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80',
-    icon: 'Palette',
-    description: 'Spécialiste en design graphique et identité visuelle.'
-  },
-  {
-    id: '3',
-    name: 'David Kabongo',
-    role: 'Chef de projet',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80',
-    icon: 'Briefcase',
-    description: 'Expert en gestion de projets et coordination d\'équipe.'
-  },
-  {
-    id: '4',
-    name: 'Jean Mukendi',
-    role: 'Cadreur',
-    image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80',
-    icon: 'Camera',
-    description: 'Spécialiste en production vidéo et cadrage professionnel.'
-  }
-];
+import React, { useEffect, useState } from 'react'
+import {
+  ArrowUpToLine,
+  Camera,
+  Code,
+  Filter,
+  ChevronDown,
+  Loader2,
+  Palette,
+  Pencil,
+  Plus,
+  Trash2,
+  BarChart3,
+  Target,
+  PenTool,
+} from 'lucide-react'
+import { Button } from '../../components/Button'
+import { genericApi } from '../../api'
+import type { TeamMember } from '../../types'
 
 const iconOptions = [
   { value: 'Target', label: 'Target', icon: Target },
   { value: 'Palette', label: 'Palette', icon: Palette },
-  { value: 'Briefcase', label: 'Briefcase', icon: Briefcase },
   { value: 'Camera', label: 'Camera', icon: Camera },
   { value: 'Code', label: 'Code', icon: Code },
   { value: 'BarChart3', label: 'Chart', icon: BarChart3 },
-  { value: 'PenTool', label: 'Design', icon: PenTool }
-];
+  { value: 'PenTool', label: 'Design', icon: PenTool },
+]
 
 export function DashboardTeam() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  useEffect(() => {
+    fetchTeamMembers()
+  }, [])
+
+  const fetchTeamMembers = async () => {
+    try {
+      const data = await genericApi.get<TeamMember>('/api/users')
+      setTeamMembers(data['hydra:member'] || [])
+    } catch (err) {
+      setError("Une erreur est survenue lors du chargement de l'équipe")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsUpdating(true)
+
+    const formData = new FormData(e.currentTarget)
+    const data = Object.fromEntries(formData.entries())
+
+    try {
+      if (selectedMember) {
+        await genericApi.put(`/api/users/${selectedMember.id}`, data)
+      } else {
+        await genericApi.post('/api/users', data)
+      }
+      await fetchTeamMembers()
+      setIsModalOpen(false)
+    } catch (err) {
+      setError('Une erreur est survenue lors de la sauvegarde')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce membre ?')) return
+
+    setIsUpdating(true)
+    try {
+      await genericApi.delete(`/api/users/${id}`)
+      await fetchTeamMembers()
+    } catch (err) {
+      setError('Une erreur est survenue lors de la suppression')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-6rem)] items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary-500" />
+          <p className="text-gray-600">Chargement des membres...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-[calc(100vh-6rem)] items-center justify-center p-4">
+        <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-4 text-center text-red-700">
+          {error}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Gestion de l'équipe</h1>
-        <Button
-          variant="primary"
-          size="md"
-          icon={Plus}
-          onClick={() => {
-            setSelectedMember(null);
-            setIsModalOpen(true);
-          }}
-        >
-          Nouveau membre
-        </Button>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Gestion de l'équipe</h1>
+          <p className="mt-1 text-sm text-gray-500">{teamMembers.length} membres au total</p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button
+            variant="primary"
+            size="md"
+            icon={Plus}
+            onClick={() => {
+              setSelectedMember(null)
+              setIsModalOpen(true)
+            }}
+          >
+            Nouveau membre
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {teamMembers.map((member) => {
-          const IconComponent = iconOptions.find(i => i.value === member.icon)?.icon || Target;
+          const IconComponent = iconOptions.find((i) => i.value === member.icon)?.icon || Target
           return (
             <div
               key={member.id}
-              className="bg-white rounded-xl shadow-sm overflow-hidden group"
+              className="group relative overflow-hidden rounded-xl bg-white shadow-sm transition-all hover:shadow-lg"
             >
               <div className="aspect-w-3 aspect-h-4 relative">
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/40 to-transparent opacity-60 group-hover:opacity-70 transition-opacity" />
-                <div className="absolute top-4 right-4 bg-white/90 p-2 rounded-full">
-                  <IconComponent className="w-5 h-5 text-primary-500" />
+                <img src={member.image} alt={member.name} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/40 to-transparent opacity-60 transition-opacity group-hover:opacity-70" />
+                <div className="absolute right-4 top-4 rounded-full bg-white/90 p-2">
+                  <IconComponent className="h-5 w-5 text-primary-500" />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 p-6">
-                  <h3 className="text-lg font-bold text-white mb-1">{member.name}</h3>
-                  <p className="text-primary-200 text-sm mb-2">{member.role}</p>
-                  <p className="text-sm text-gray-300">{member.description}</p>
+                  <h3 className="mb-1 text-lg font-bold text-white">{member.name}</h3>
+                  <p className="mb-2 text-sm text-primary-200">{member.role}</p>
+                  <p className="text-sm text-gray-300 opacity-0 transition-opacity group-hover:opacity-100">
+                    {member.description}
+                  </p>
                 </div>
               </div>
 
-              <div className="p-4 border-t border-gray-100">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setSelectedMember(member);
-                      setIsModalOpen(true);
-                    }}
-                    className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Handle delete
-                      if (confirm('Êtes-vous sûr de vouloir supprimer ce membre ?')) {
-                        // Delete logic here
-                      }
-                    }}
-                    className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+              <div className="flex items-center justify-end gap-2 border-t border-gray-100 p-4">
+                <button
+                  onClick={() => {
+                    setSelectedMember(member)
+                    setIsModalOpen(true)
+                  }}
+                  className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-primary-600"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(member.id)}
+                  className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             </div>
-          );
+          )
         })}
       </div>
 
       {/* Member Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-2xl">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-2xl rounded-xl bg-white p-6">
+            <h2 className="mb-6 text-xl font-bold text-gray-900">
               {selectedMember ? 'Modifier le membre' : 'Nouveau membre'}
             </h2>
-            
-            <form className="space-y-6">
+
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Nom</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2 border rounded-lg"
+                    name="name"
                     defaultValue={selectedMember?.name}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rôle
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Rôle</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2 border rounded-lg"
+                    name="role"
                     defaultValue={selectedMember?.role}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Description</label>
                 <textarea
-                  className="w-full px-4 py-2 border rounded-lg"
-                  rows={3}
+                  name="description"
                   defaultValue={selectedMember?.description}
+                  rows={3}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Icône
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Icône</label>
                   <select
-                    className="w-full px-4 py-2 border rounded-lg"
+                    name="icon"
                     defaultValue={selectedMember?.icon}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    required
                   >
-                    {iconOptions.map(option => (
+                    {iconOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -191,32 +235,35 @@ export function DashboardTeam() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Image
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Image</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="URL de l'image"
+                    name="image"
                     defaultValue={selectedMember?.image}
+                    placeholder="URL de l'image"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    required
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-4 pt-4">
+              <div className="flex justify-end gap-4 border-t pt-6">
                 <Button
                   variant="ghost"
                   size="md"
                   onClick={() => setIsModalOpen(false)}
+                  disabled={isUpdating}
                 >
                   Annuler
                 </Button>
-                <Button
-                  variant="primary"
-                  size="md"
-                  type="submit"
-                >
-                  {selectedMember ? 'Mettre à jour' : 'Créer'}
+                <Button variant="primary" size="md" type="submit" disabled={isUpdating}>
+                  {isUpdating
+                    ? selectedMember
+                      ? 'Mise à jour...'
+                      : 'Création...'
+                    : selectedMember
+                      ? 'Mettre à jour'
+                      : 'Créer'}
                 </Button>
               </div>
             </form>
@@ -224,5 +271,5 @@ export function DashboardTeam() {
         </div>
       )}
     </div>
-  );
+  )
 }

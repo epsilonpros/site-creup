@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { ArrowRight, Calendar, CheckCircle, Clock, Mail, MapPin, Phone } from 'lucide-react'
+import {
+  ArrowRight,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+} from 'lucide-react'
 import { Button } from '../components/Button'
 import { appointmentsApi, servicesApi } from '../api'
 import type { Service } from '../types'
@@ -25,10 +34,12 @@ export function AppointmentPage() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const data = await servicesApi.getAll().catch(() => [])
-        setServices(data['hydra:member'])
+        const data = await servicesApi.getAll()
+        // Ensure we have an array of services, defaulting to empty array if not
+        setServices(data?.['hydra:member'] || [])
       } catch (err) {
         setError('Une erreur est survenue lors du chargement des services')
+        setServices([]) // Ensure services is an empty array on error
       } finally {
         setIsLoading(false)
       }
@@ -77,17 +88,6 @@ export function AppointmentPage() {
 
   const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00']
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center pt-28">
-        <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
-          <p className="text-gray-600">Chargement...</p>
-        </div>
-      </div>
-    )
-  }
-
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gray-50 pt-28">
@@ -116,19 +116,42 @@ export function AppointmentPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-28">
+    <main className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-[#0D3640] via-[#0A2A32] to-[#071F24] py-24 pt-28 lg:pt-24">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-10" />
+          <div className="animate-pulse-slow absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)]" />
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <div className="mb-6 inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
+            <MessageCircle className="h-4 w-4 text-primary-200" />
+            <span className="text-sm font-medium text-primary-200">Discutons de votre projet</span>
+          </div>
+
+          <h1 className="mb-6 text-4xl font-bold text-white sm:text-5xl md:text-6xl">
+            Prendre rendez-vous
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-xl text-primary-100">
+            Notre équipe est à votre écoute pour vous accompagner dans vos projets de communication
+          </p>
+        </div>
+      </section>
+
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2">
           {/* Form Section */}
           <div className="rounded-2xl bg-white p-8 shadow-lg">
-            <h1 className="mb-6 text-2xl font-bold text-gray-900">Prendre rendez-vous</h1>
+            <h2 className="mb-6 text-2xl font-bold text-gray-900">Informations du rendez-vous</h2>
 
             {error && <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">{error}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Personal Information */}
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Informations personnelles</h2>
+                <h3 className="text-lg font-semibold text-gray-900">Informations personnelles</h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label
@@ -214,28 +237,34 @@ export function AppointmentPage() {
 
               {/* Service Selection */}
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Service souhaité</h2>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {services.map((service) => (
-                    <button
-                      key={service.id}
-                      type="button"
-                      onClick={() => setSelectedService(service.id)}
-                      className={`rounded-lg border p-4 text-left shadow-sm transition-all ${
-                        selectedService === service.id
-                          ? 'border-primary-500 bg-primary-50 text-primary-700'
-                          : 'border-gray-200 hover:border-primary-200'
-                      }`}
-                    >
-                      {service.title}
-                    </button>
-                  ))}
-                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Service souhaité</h3>
+                {isLoading ? (
+                  <div className="text-gray-500">Chargement des services...</div>
+                ) : services.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {services.map((service) => (
+                      <button
+                        key={service.id}
+                        type="button"
+                        onClick={() => setSelectedService(service.id)}
+                        className={`rounded-lg border p-4 text-left shadow-sm transition-all ${
+                          selectedService === service.id
+                            ? 'border-primary-500 bg-primary-50 text-primary-700'
+                            : 'border-gray-200 hover:border-primary-200'
+                        }`}
+                      >
+                        {service.title}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500">Aucun service disponible</div>
+                )}
               </div>
 
               {/* Date and Time Selection */}
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Date et heure</h2>
+                <h3 className="text-lg font-semibold text-gray-900">Date et heure</h3>
                 <div>
                   <label htmlFor="date" className="mb-2 block text-sm font-medium text-gray-700">
                     Date souhaitée

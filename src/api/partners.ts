@@ -11,7 +11,7 @@ export interface Partner {
 
 export const partnersApi = {
   getAll: async () => {
-    const response = await api.get('/api/partners')
+    const response = await api.get('/api/partners?limit=100')
     return response.data
   },
 

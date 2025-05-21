@@ -42,7 +42,7 @@ export function LoginPage() {
     <div className="flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <Logo className="h-12 w-auto" color="dark" />
+          <Logo className="h-20 w-auto" color="dark" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
           Connexion au tableau de bord
@@ -97,33 +97,11 @@ export function LoginPage() {
             </div>
 
             <div>
-              <Button type="submit" variant="primary" size="lg" fullWidth disabled={isLoading}>
-                {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+              <Button type="submit" variant="primary" size="lg" fullWidth>
+                Se connecter
               </Button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-gray-500">Besoin d'aide ?</span>
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-center">
-              <div className="text-sm">
-                <a
-                  href="mailto:support@creup-group.com"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
-                  Contactez le support
-                </a>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -15,7 +15,9 @@ import {
 import { Button } from '../components/Button'
 import { servicesApi } from '../api'
 import type { Service } from '../types'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { ServiceSkeleton } from '../components/Skeletons'
+import slugify from 'slugify'
 
 const processSteps = [
   {
@@ -45,11 +47,12 @@ export function ServicesPage() {
   const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const location = useLocation()
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const data = await servicesApi.getAll().catch(() => [])
+        const data = await servicesApi.getAll().catch(() => ({ 'hydra:member': [] }))
         setServices(data['hydra:member'] || [])
       } catch (err) {
         setError('Une erreur est survenue lors du chargement des services')
@@ -61,38 +64,34 @@ export function ServicesPage() {
     fetchServices()
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center pt-20">
-        <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
-          <p className="text-gray-600">Chargement des services...</p>
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    const anchor = location.hash?.replace('#', '')
+    if (anchor) {
+      const interval = setInterval(() => {
+        const el = document.getElementById(anchor)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          clearInterval(interval)
+        }
+      }, 100) // essaie toutes les 100ms
 
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center pt-20">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
-      </div>
-    )
-  }
+      // stop après 3s au cas où la section ne vient jamais
+      setTimeout(() => clearInterval(interval), 3000)
+    }
+  }, [location])
 
   return (
-    <main className="">
+    <main>
       {/* Hero Section */}
       <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-gradient-to-br from-[#0D3640] via-[#0A2A32] to-[#071F24]">
         <div className="absolute inset-0">
-          <div className="animate-pulse-slow absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)]" />
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-10 mix-blend-overlay" />
           <div className="absolute left-10 top-20 h-64 w-64 animate-float rounded-full bg-primary-600/20 blur-3xl" />
           <div className="absolute bottom-10 right-10 h-96 w-96 animate-float rounded-full bg-primary-400/10 blur-3xl delay-1000" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className="relative mx-auto max-w-7xl px-4 pt-36 sm:px-6 lg:px-8 lg:py-24">
+          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
             <div className="text-left">
               <h1 className="mb-6 animate-fade-in-up text-4xl font-bold text-white md:text-5xl lg:text-6xl">
                 <span className="block">Transformez votre</span>
@@ -113,7 +112,7 @@ export function ServicesPage() {
               </div>
             </div>
 
-            <div className="relative mt-12 grid animate-fade-in-up-delay-3 grid-cols-2 gap-6 p-8">
+            <div className="relative grid animate-fade-in-up-delay-3 grid-cols-2 gap-6 p-8 lg:mt-12">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-white/10 p-2">
                   <Target className="h-5 w-5 text-primary-200" />
@@ -160,44 +159,49 @@ export function ServicesPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            {services.map((service) => {
-              const Icon = icons[service.icon]
-              return (
-                <div
-                  key={service.id}
-                  className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg transition-all hover:shadow-xl"
-                >
-                  <div className="absolute right-0 top-0 -mr-4 -mt-4 h-24 w-24 rounded-full bg-gradient-to-br from-primary-100 to-primary-50 opacity-50 transition-transform duration-500 group-hover:scale-150" />
+            {isLoading
+              ? Array(4)
+                  .fill(0)
+                  .map((_, i) => <ServiceSkeleton key={i} />)
+              : services.map((service) => {
+                  const Icon = icons[service.icon]
+                  return (
+                    <div
+                      key={service.id}
+                      id={slugify(service.title, { lower: true })}
+                      className="group relative scroll-mt-32 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg transition-all hover:shadow-xl"
+                    >
+                      <div className="absolute right-0 top-0 -mr-4 -mt-4 h-24 w-24 rounded-full bg-gradient-to-br from-primary-100 to-primary-50 opacity-50 transition-transform duration-500 group-hover:scale-150" />
 
-                  <div className="relative p-8">
-                    <div className="mb-6 flex items-center gap-4">
-                      <span className="inline-flex rounded-xl bg-primary-50 p-3 text-primary-600 transition-transform group-hover:scale-110">
-                        <Icon className="h-6 w-6" />
-                      </span>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">{service.title}</h3>
-                        <p className="text-sm text-gray-500">{service.description}</p>
+                      <div className="relative p-8">
+                        <div className="mb-6 flex items-center gap-4">
+                          <span className="inline-flex rounded-xl bg-primary-50 p-3 text-primary-600 transition-transform group-hover:scale-110">
+                            <Icon className="h-6 w-6" />
+                          </span>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900">{service.title}</h3>
+                            <p className="text-sm text-gray-500">{service.description}</p>
+                          </div>
+                        </div>
+
+                        {/* Features list */}
+                        <ul className="mb-8 space-y-3">
+                          {service.fields.split('\n').map((feature, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-center gap-3 text-gray-600 transition-transform group-hover:translate-x-1"
+                            >
+                              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
+                                <Check className="h-3 w-3" />
+                              </span>
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
-
-                    {/* Features list */}
-                    <ul className="mb-8 space-y-3">
-                      {service.fields.split('\n').map((feature, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-center gap-3 text-gray-600 transition-transform group-hover:translate-x-1"
-                        >
-                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-                            <Check className="h-3 w-3" />
-                          </span>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )
-            })}
+                  )
+                })}
           </div>
 
           <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">

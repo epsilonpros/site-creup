@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
-  BarChart3,
+  ChartNoAxesCombined,
   Clock,
   icons,
   Lightbulb,
@@ -14,6 +14,55 @@ import { Button } from '../components/Button'
 import { genericApi } from '../api'
 import { Stats, TeamMember } from '../types.ts'
 import { Link } from 'react-router-dom'
+import { ServiceSkeleton, StatSkeleton } from '../components/Skeletons'
+
+const values = [
+  {
+    icon: Lightbulb,
+    title: 'Innovation',
+    description: 'Nous explorons constamment de nouvelles approches pour vous démarquer',
+  },
+  {
+    icon: Users,
+    title: 'Collaboration',
+    description: 'Nous travaillons en étroite collaboration avec nos clients',
+  },
+  {
+    icon: Target,
+    title: 'Excellence',
+    description: "Nous visons l'excellence dans chaque projet",
+  },
+  {
+    icon: TrendingUp,
+    title: 'Performance',
+    description: 'Nous mesurons et optimisons chaque action',
+  },
+]
+
+const features = [
+  {
+    icon: Target,
+    title: 'Expertise reconnue',
+    description:
+      'Nos équipes sont composées de professionnels passionnés et expérimentés dans le domaine de la communication.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Créativité sans limite',
+    description: 'Nous vous proposons des solutions innovantes et originales pour vous démarquer.',
+  },
+  {
+    icon: Users,
+    title: 'Approche personnalisée',
+    description: 'Nous adaptons nos services à vos besoins spécifiques et à vos objectifs.',
+  },
+  {
+    icon: ChartNoAxesCombined,
+    title: 'Résultats concrets',
+    description:
+      'Nous vous accompagnons vers la réussite de vos projets et vous aidons à atteindre vos objectifs de communication.',
+  },
+]
 
 export function AboutPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
@@ -28,11 +77,11 @@ export function AboutPage() {
           genericApi.get<TeamMember>('/api/users'),
           genericApi.get<Stats>('/api/stats'),
         ])
+
         setTeamMembers(teamData['hydra:member'] || [])
         setStats(statsData?.member || [])
-        console.log(teamData)
       } catch (err) {
-        // setError('Une erreur est survenue lors du chargement des données');
+        setError('Une erreur est survenue lors du chargement des données')
       } finally {
         setIsLoading(false)
       }
@@ -41,73 +90,13 @@ export function AboutPage() {
     fetchData()
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center pt-20">
-        <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
-          <p className="text-gray-600">Chargement...</p>
-        </div>
-      </div>
-    )
+  const showIcon = (icon: string) => {
+    const Icon = icons[icon]
+    try {
+      return <Icon className="h-5 w-5 text-primary-500" />
+    } catch (e) {}
+    return ''
   }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center pt-20">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
-      </div>
-    )
-  }
-
-  const values = [
-    {
-      icon: Lightbulb,
-      title: 'Innovation',
-      description: 'Nous explorons constamment de nouvelles approches pour vous démarquer',
-    },
-    {
-      icon: Users,
-      title: 'Collaboration',
-      description: 'Nous travaillons en étroite collaboration avec nos clients',
-    },
-    {
-      icon: Target,
-      title: 'Excellence',
-      description: "Nous visons l'excellence dans chaque projet",
-    },
-    {
-      icon: TrendingUp,
-      title: 'Performance',
-      description: 'Nous mesurons et optimisons chaque action',
-    },
-  ]
-
-  const features = [
-    {
-      icon: Target,
-      title: 'Expertise reconnue',
-      description:
-        'Nos équipes sont composées de professionnels passionnés et expérimentés dans le domaine de la communication.',
-    },
-    {
-      icon: Sparkles,
-      title: 'Créativité sans limite',
-      description:
-        'Nous vous proposons des solutions innovantes et originales pour vous démarquer.',
-    },
-    {
-      icon: Users,
-      title: 'Approche personnalisée',
-      description: 'Nous adaptons nos services à vos besoins spécifiques et à vos objectifs.',
-    },
-    {
-      icon: BarChart3,
-      title: 'Résultats concrets',
-      description:
-        'Nous vous accompagnons vers la réussite de vos projets et vous aidons à atteindre vos objectifs de communication.',
-    },
-  ]
 
   return (
     <main className="">
@@ -150,23 +139,32 @@ export function AboutPage() {
             {/* Right column - Stats grid */}
             <div className="relative">
               <div className="grid animate-fade-in-up-delay-3 grid-cols-2 gap-4">
-                {stats.map((stat, index) => {
-                  const Icon = icons[stat.icon]
-                  return (
-                    <div
-                      key={index}
-                      className="group rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-white/20"
-                    >
-                      <div className="mb-3 flex items-center gap-4">
-                        <div className="rounded-lg bg-white/10 p-2">
-                          <Icon className="h-5 w-5 text-primary-200" />
+                {isLoading ? (
+                  <>
+                    <StatSkeleton dark />
+                    <StatSkeleton dark />
+                    <StatSkeleton dark />
+                    <StatSkeleton dark />
+                  </>
+                ) : (
+                  stats.map((stat, index) => {
+                    const Icon = icons[stat.icon]
+                    return (
+                      <div
+                        key={index}
+                        className="group rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-white/20"
+                      >
+                        <div className="mb-3 flex items-center gap-4">
+                          <div className="rounded-lg bg-white/10 p-2">
+                            <Icon className="h-5 w-5 text-primary-200" />
+                          </div>
                         </div>
+                        <div className="mb-1 text-3xl font-bold text-white">{stat.value}</div>
+                        <div className="text-sm text-primary-200">{stat.label}</div>
                       </div>
-                      <div className="mb-1 text-3xl font-bold text-white">{stat.value}</div>
-                      <div className="text-sm text-primary-200">{stat.label}</div>
-                    </div>
-                  )
-                })}
+                    )
+                  })
+                )}
               </div>
 
               {/* Decorative elements */}
@@ -247,34 +245,37 @@ export function AboutPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {teamMembers.map((member, index) => {
-              const Icon = icons[member.icon]
-              return (
-                <div
-                  key={index}
-                  className="group relative overflow-hidden rounded-xl bg-white shadow-lg transition-all hover:shadow-xl"
-                >
-                  <div className="aspect-w-3 aspect-h-4 relative overflow-hidden">
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="h-full w-full transform object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent opacity-60 transition-opacity group-hover:opacity-70" />
-                    <div className="absolute right-4 top-4 rounded-full bg-white/90 p-2">
-                      <Icon className="h-5 w-5 text-primary-500" />
+            {isLoading
+              ? Array(4)
+                  .fill(0)
+                  .map((_, i) => <ServiceSkeleton key={i} />)
+              : teamMembers.map((member, index) => {
+                  return (
+                    <div
+                      key={index}
+                      className="group relative overflow-hidden rounded-xl bg-white shadow-lg transition-all hover:shadow-xl"
+                    >
+                      <div className="aspect-w-3 aspect-h-4 relative overflow-hidden">
+                        <img
+                          src={member.image}
+                          alt={member.name}
+                          className="h-full w-full transform object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent opacity-60 transition-opacity group-hover:opacity-70" />
+                        <div className="absolute right-4 top-4 rounded-full bg-white/90 p-2">
+                          {showIcon(member.icon)}
+                        </div>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                        <h3 className="mb-1 text-lg font-bold">{member.name}</h3>
+                        <p className="mb-2 text-sm text-primary-200">{member.role}</p>
+                        <p className="text-sm text-gray-300 opacity-0 transition-opacity group-hover:opacity-100">
+                          {member.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="mb-1 text-lg font-bold">{member.name}</h3>
-                    <p className="mb-2 text-sm text-primary-200">{member.role}</p>
-                    <p className="text-sm text-gray-300 opacity-0 transition-opacity group-hover:opacity-100">
-                      {member.description}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
+                  )
+                })}
           </div>
 
           <div className="mt-16 text-center">

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Clock } from 'lucide-react';
-import { Button } from './Button';
-import { Logo } from './Logo';
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { Clock, Menu, X } from 'lucide-react'
+import { Button } from './Button'
+import { Logo } from './Logo'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const navigation = [
   { name: 'Accueil', href: '/' },
@@ -10,41 +11,92 @@ const navigation = [
   { name: 'Réalisations', href: '/portfolio' },
   { name: 'À propos', href: '/about' },
   { name: 'Contact', href: '/contact' },
-];
+]
 
-export function Header() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const location = useLocation();
+interface Props {
+  isScrolled: boolean
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
+}
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
+export function Header({ isScrolled = false, isOpen, setIsOpen }: Props) {
   // Add scroll to top handler
   const handleNavClick = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setIsOpen(false);
-  };
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setIsOpen(false)
+  }
+
+  const isActive = (path: string) => {
+    return location.pathname === path
+  }
+
+  const menuVariants = {
+    closed: {
+      opacity: 0,
+      scale: 0.95,
+      transition: {
+        duration: 0.2,
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
+    open: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.2,
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
+  }
+  const itemVariants = {
+    closed: {
+      opacity: 0,
+      y: 20,
+      transition: {
+        duration: 0.2,
+      },
+    },
+    open: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        delay: 0.1,
+      },
+    },
+  }
+
+  const logoHeight = () => {
+    let height = 'h-16'
+
+    if (isScrolled && !isOpen) {
+      // height = 'h-10 md:h-14'
+    }
+    return height
+  }
 
   return (
-    <header
-      className={`fixed w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md' : 'bg-transparent'
-      }`}
+    <motion.div
+      initial={false}
+      transition={{
+        duration: 0.4,
+        ease: [0.4, 0, 0.2, 1],
+      }}
+      className="left-0 right-0 top-0 z-50 w-full"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`flex justify-between items-center ${isScrolled ? 'h-16' : 'pt-4 h-20 lg:h-24'}`}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between">
           <div className="flex-shrink-0">
-            <Link to="/" onClick={handleNavClick} className="block">
-              <Logo 
-                className={`${!isScrolled ? 'h-16' : 'h-10 md:h-14'} w-auto`}
-                color={isScrolled ? 'dark' : 'light'}
+            <Link
+              to="/"
+              onClick={handleNavClick}
+              className={`relative z-50 text-2xl font-bold transition-all duration-300 ${
+                isScrolled && !isOpen ? '-translate-x-4 scale-75' : 'scale-100'
+              } block`}
+            >
+              <Logo
+                className={`${logoHeight()} w-auto`}
+                color={isScrolled && !isOpen ? 'dark' : 'light'}
               />
             </Link>
           </div>
@@ -55,72 +107,119 @@ export function Header() {
                 key={item.name}
                 to={item.href}
                 onClick={handleNavClick}
-                className={`px-3 py-2 text-sm font-medium transition-colors ${
-                  isScrolled
-                    ? 'text-gray-700 hover:text-primary-500'
-                    : 'text-gray-100 hover:text-white'
+                className={`relative px-3 py-2 text-sm font-medium transition-colors hover:text-primary-500 ${
+                  isScrolled ? 'text-gray-700' : 'text-gray-100'
                 }`}
               >
                 {item.name}
+                {isActive(item.href) && (
+                  <motion.div
+                    layoutId="underline"
+                    className={`absolute left-0 right-0 h-0.5 ${
+                      isScrolled ? 'bg-primary-500' : 'bg-white'
+                    } bottom-0`}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
               </Link>
             ))}
             <Link to="/appointment">
-              <Button
-                variant="primary"
-                size="md"
-                icon={Clock}
-              >
+              <Button variant="primary" size="md" icon={Clock}>
                 Prendre rendez-vous
               </Button>
             </Link>
           </div>
 
-          <div className="md:hidden flex items-center">
+          <div className="relative z-50 flex items-center md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className={`inline-flex items-center justify-center p-2 rounded-md ${
-                isScrolled ? 'text-gray-700' : 'text-white'
+              className={`inline-flex items-center justify-center rounded-md p-2 ${
+                isScrolled && !isOpen ? 'text-gray-700' : 'text-white'
               }`}
+              aria-label={isOpen ? 'Close Menu' : 'Open Menu'}
             >
-              <span className="sr-only">Ouvrir le menu</span>
-              {isOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
-              )}
+              <AnimatePresence mode="wait">
+                <span className="sr-only">Ouvrir le menu</span>
+                {isOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ opacity: 0, rotate: -90 }}
+                    animate={{ opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, rotate: 90 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <X className="block h-6 w-6" aria-hidden="true" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ opacity: 0, rotate: 90 }}
+                    animate={{ opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, rotate: -90 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Menu className="block h-6 w-6" aria-hidden="true" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
           </div>
         </div>
       </div>
 
-      <div
-        className={`md:hidden transition-all duration-300 ease-in-out ${
-          isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
-        }`}
-      >
-        <div className="px-2 pt-2 pb-3 space-y-1 bg-white/80 backdrop-blur-md shadow-lg">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className="block w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-500 hover:bg-gray-50 rounded-md"
-              onClick={handleNavClick}
-            >
-              {item.name}
-            </Link>
-          ))}
-          <Link to="/appointment" className="block w-full">
-            <Button
-              variant="primary"
-              size="md"
-              fullWidth
-              icon={Clock}
-            >
-              Prendre rendez-vous
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial="closed"
+            animate="open"
+            exit="closed"
+            variants={menuVariants}
+            className="fixed inset-0 z-40 h-screen bg-gradient-to-br from-secondary-400 via-secondary-500 to-secondary-600 lg:hidden"
+          >
+            <div className="relative flex min-h-screen flex-col">
+              <div className="flex flex-1 items-center justify-start px-7">
+                <motion.ul
+                  className="space-y-2 text-start"
+                  variants={{
+                    open: {
+                      transition: {
+                        staggerChildren: 0.1,
+                      },
+                    },
+                  }}
+                >
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`relative block w-full ${isOpen ? '' : 'rounded-md'} ${isActive(item.href) ? 'border-r-4 border-solid border-primary-500' : ''} px-3 py-2 text-base font-medium text-white hover:bg-gray-50 hover:text-primary-500`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+
+                  {/* CTA Button - Right aligned */}
+
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Link to="/appointment" className="mt-8 block w-full">
+                      <Button variant="primary" size="md" fullWidth icon={Clock}>
+                        Prendre rendez-vous
+                      </Button>
+                    </Link>
+                  </motion.div>
+                </motion.ul>
+              </div>
+
+              <motion.div variants={itemVariants} className="pb-12 text-center">
+                <p className="text-sm text-white/60">
+                  &copy; {new Date().getFullYear()} CreUp Group. Tous droits réservés.
+                </p>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
 }

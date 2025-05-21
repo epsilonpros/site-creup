@@ -5,6 +5,7 @@ import type { CaseStudy, Stats } from '../types'
 import { projectsApi } from '../api'
 import { Link } from 'react-router-dom'
 import api from '../api/axios.ts'
+import { ProjectSkeleton, StatSkeleton } from '../components/Skeletons'
 
 const typeIcons = {
   Design: Printer,
@@ -23,11 +24,10 @@ export function PortfolioPage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const data = await projectsApi.getAll().catch(() => [])
+        const data = await projectsApi.getAll().catch(() => ({ 'hydra:member': [] }))
         setProjects(data['hydra:member'] || [])
 
-        const stats = await api.get('/api/stats').catch(() => [])
-
+        const stats = await api.get('/api/stats').catch(() => ({ data: { member: [] } }))
         setStats(stats?.data?.member || [])
       } catch (err) {
         setError('Une erreur est survenue lors du chargement des projets')
@@ -51,25 +51,6 @@ export function PortfolioPage() {
       ? projects
       : projects.filter((project) => project.category === selectedCategory)
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center pt-20">
-        <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
-          <p className="text-gray-600">Chargement des projets...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center pt-20">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
-      </div>
-    )
-  }
-
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -81,7 +62,7 @@ export function PortfolioPage() {
           <div className="absolute bottom-10 right-10 h-96 w-96 animate-float rounded-full bg-primary-400/10 blur-3xl delay-1000" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-36 sm:px-6 lg:px-8 lg:py-24">
           <div className="text-center">
             <div className="mb-6 inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
               <Sparkles className="h-4 w-4 text-primary-200" />
@@ -162,47 +143,51 @@ export function PortfolioPage() {
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project) => {
-              const ProjectTypeIcon = typeIcons[project.category as keyof typeof typeIcons]
-              return (
-                <div
-                  key={project.id}
-                  className="group overflow-hidden rounded-2xl bg-white shadow-lg transition-all hover:shadow-xl"
-                >
-                  <div className="aspect-w-16 aspect-h-9 relative overflow-hidden">
-                    <img
-                      src={project.image}
-                      alt={project.title}
-                      className="h-full w-full transform object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    {ProjectTypeIcon && (
-                      <div className="absolute right-4 top-4 rounded-full bg-white/90 p-2">
-                        <ProjectTypeIcon className="h-5 w-5 text-primary-500" />
+            {isLoading
+              ? Array(6)
+                  .fill(0)
+                  .map((_, i) => <ProjectSkeleton key={i} />)
+              : filteredProjects.map((project) => {
+                  const ProjectTypeIcon = typeIcons[project.category as keyof typeof typeIcons]
+                  return (
+                    <div
+                      key={project.id}
+                      className="group overflow-hidden rounded-2xl bg-white shadow-lg transition-all hover:shadow-xl"
+                    >
+                      <div className="aspect-w-16 aspect-h-9 relative overflow-hidden">
+                        <img
+                          src={project.image}
+                          alt={project.title}
+                          className="h-full w-full transform object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                        {ProjectTypeIcon && (
+                          <div className="absolute right-4 top-4 rounded-full bg-white/90 p-2">
+                            <ProjectTypeIcon className="h-5 w-5 text-primary-500" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  <div className="p-6">
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700">
-                        {project.category}
-                      </span>
-                      <span className="text-sm text-gray-500">{project.client?.name}</span>
+                      <div className="p-6">
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700">
+                            {project.category}
+                          </span>
+                          <span className="text-sm text-gray-500">{project.client?.name}</span>
+                        </div>
+
+                        <h3 className="mb-2 text-xl font-bold text-gray-900">{project.title}</h3>
+                        <p className="mb-4 text-sm text-gray-600">{project.description}</p>
+
+                        <Link to={`/portfolio/${project.id}`}>
+                          <Button variant="primary" size="sm" icon={ArrowRight} className="w-full">
+                            Voir le projet
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-
-                    <h3 className="mb-2 text-xl font-bold text-gray-900">{project.title}</h3>
-                    <p className="mb-4 text-sm text-gray-600">{project.description}</p>
-
-                    <Link to={`/portfolio/${project.id}`}>
-                      <Button variant="primary" size="sm" icon={ArrowRight} className="w-full">
-                        Voir le projet
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )
-            })}
+                  )
+                })}
           </div>
         </div>
       </section>
@@ -211,12 +196,16 @@ export function PortfolioPage() {
       <section className="bg-secondary-700 px-4 py-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            {stats.map((stat) => (
-              <div className="text-center" key={stat.label}>
-                <div className="mb-2 text-4xl font-bold text-white">{stat.value}</div>
-                <div className="text-primary-200">{stat.label}</div>
-              </div>
-            ))}
+            {isLoading
+              ? Array(4)
+                  .fill(0)
+                  .map((_, i) => <StatSkeleton key={i} dark />)
+              : stats.map((stat) => (
+                  <div className="text-center" key={stat.label}>
+                    <div className="mb-2 text-4xl font-bold text-white">{stat.value}</div>
+                    <div className="text-primary-200">{stat.label}</div>
+                  </div>
+                ))}
           </div>
         </div>
       </section>
