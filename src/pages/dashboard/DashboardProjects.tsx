@@ -1,9 +1,25 @@
 import React, { useEffect, useState } from 'react'
-import { Image as ImageIcon, Pencil, Plus, Trash2 } from 'lucide-react'
+import {
+  Image as ImageIcon,
+  LayoutDashboard,
+  Loader2,
+  Pencil,
+  Play,
+  Plus,
+  Printer,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '../../components/Button'
 import type { CaseStudy } from '../../types'
 import { projectsApi } from '../../api/projects'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+
+const typeIcons = {
+  'Graphique design': Printer,
+  'Photo': ImageIcon,
+  'Vidéo': Play,
+  'Projet interne': LayoutDashboard,
+}
 
 export function DashboardProjects() {
   const [projects, setProjects] = useState<CaseStudy[]>([])
@@ -45,16 +61,10 @@ export function DashboardProjects() {
     return (
       <div className="flex h-[calc(100vh-6rem)] items-center justify-center">
         <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary-500" />
           <p className="text-gray-600">Chargement des projets...</p>
         </div>
       </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
     )
   }
 
@@ -63,7 +73,6 @@ export function DashboardProjects() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestion des projets</h1>
-          <p className="mt-1 text-sm text-gray-500">{projects.length} projets au total</p>
         </div>
         <Button
           variant="primary"
@@ -81,16 +90,13 @@ export function DashboardProjects() {
             <thead>
               <tr className="bg-gray-50">
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Titre
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Client
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Catégorie
+                  Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Actions
@@ -98,44 +104,35 @@ export function DashboardProjects() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {projects.map((project) => (
-                <tr key={project.id} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="h-12 w-12 overflow-hidden rounded-lg">
-                      <img
-                        src={project.image}
-                        alt={project.title}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">{project.title}</td>
-                  <td className="whitespace-nowrap px-6 py-4">{project?.client?.name}</td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span className="rounded-full bg-primary-100 px-2 py-1 text-xs font-medium text-primary-700">
-                      {project.category}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        icon={Pencil}
-                        onClick={() => navigate(`/dashboard/projects/${project.id}`)}
-                      >
-                        Modifier
-                      </Button>
-                      <button
-                        onClick={() => handleDelete(project.id)}
-                        className="p-2 text-gray-600 transition-colors hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {projects.map((project) => {
+                return (
+                  <tr key={project.id} className="hover:bg-gray-50">
+                    <td className="line-clamp-1 whitespace-nowrap px-6 py-4">{project.title}</td>
+                    <td className="whitespace-nowrap px-6 py-4">{project?.client?.name}</td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span className="rounded-full bg-primary-100 px-2 py-1 text-xs font-medium text-primary-700">
+                        {project.category}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          className="p-2 text-gray-600 transition-colors hover:text-red-600"
+                          onClick={() => navigate(`/dashboard/projects/${project.id}`)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(project.id)}
+                          className="p-2 text-gray-600 transition-colors hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

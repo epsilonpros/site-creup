@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from 'axios'
 
 // Création d'une instance axios avec la configuration de base
 const api = axios.create({
@@ -6,34 +6,37 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-});
+})
 
 // Intercepteur pour ajouter le token JWT à chaque requête
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const token = localStorage.getItem('token')
+    if (token && location.pathname.startsWith('/dashboard')) {
+      config.headers.Authorization = `Bearer ${token}`
     }
-    return config;
+    return config
   },
   (error) => {
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
 // Intercepteur pour gérer les erreurs de réponse
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      // Token expiré ou invalide
-      localStorage.removeItem('token');
-      localStorage.removeItem('isAuthenticated');
-      window.location.href = '/login';
+    if (
+      error.response?.status === 401 &&
+      location.pathname !== '/login' &&
+      location.pathname.startsWith('/dashboard')
+    ) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('isAuthenticated')
+      window.location.href = '/login'
     }
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
-export default api;
+export default api

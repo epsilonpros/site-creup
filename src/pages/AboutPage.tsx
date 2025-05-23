@@ -257,20 +257,20 @@ export function AboutPage() {
                     >
                       <div className="aspect-w-3 aspect-h-4 relative overflow-hidden">
                         <img
-                          src={member.image}
-                          alt={member.name}
+                          src={member?.image}
+                          alt={member?.name}
                           className="h-full w-full transform object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent opacity-60 transition-opacity group-hover:opacity-70" />
                         <div className="absolute right-4 top-4 rounded-full bg-white/90 p-2">
-                          {showIcon(member.icon)}
+                          {showIcon(member?.icon)}
                         </div>
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                        <h3 className="mb-1 text-lg font-bold">{member.name}</h3>
-                        <p className="mb-2 text-sm text-primary-200">{member.role}</p>
+                        <h3 className="mb-1 text-lg font-bold">{member?.name}</h3>
+                        <p className="mb-2 text-sm text-primary-200">{member?.role}</p>
                         <p className="text-sm text-gray-300 opacity-0 transition-opacity group-hover:opacity-100">
-                          {member.description}
+                          {member?.description}
                         </p>
                       </div>
                     </div>

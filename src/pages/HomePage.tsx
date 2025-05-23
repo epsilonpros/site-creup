@@ -211,12 +211,12 @@ export function HomePage() {
                   >
                     <div className="aspect-w-16 aspect-h-9 relative overflow-hidden">
                       <img
-                        src={project.type === 'video' ? project.image : project.image}
+                        src={project.category === 'Vidéo' ? project.image : project.image}
                         alt={project.title}
-                        className="h-full w-full transform object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="max-h-56 w-full transform object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      {project.type === 'video' && (
+                      {project.category === 'Vidéo' && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-transform group-hover:scale-110">
                             <Play className="h-8 w-8 fill-current text-white" />
@@ -232,7 +232,9 @@ export function HomePage() {
                         <span className="text-sm text-gray-500">{project?.client?.name}</span>
                       </div>
                       <h3 className="mb-2 text-xl font-bold text-gray-900">{project.title}</h3>
-                      <p className="mb-4 text-sm text-gray-600">{project.description}</p>
+                      <p className="mb-4 line-clamp-3 text-sm text-gray-600">
+                        {project.description}
+                      </p>
                       <Link
                         to={`/portfolio/${project.id}`}
                         className="inline-flex items-center text-primary-600 transition-all group-hover:gap-2"

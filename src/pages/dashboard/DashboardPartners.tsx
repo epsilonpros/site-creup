@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Building2, Globe, Link as LinkIcon, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Building2, Globe, Link as LinkIcon, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '../../components/Button'
 import type { Partner } from '../../api/partners'
 import { partnersApi } from '../../api/partners'
@@ -61,7 +61,14 @@ export function DashboardPartners() {
   }
 
   if (isLoading) {
-    return <div>Chargement...</div>
+    return (
+      <div className="flex h-[calc(100vh-6rem)] items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary-500" />
+          <p className="text-gray-600">Chargement des clients et partenaires...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -89,7 +96,7 @@ export function DashboardPartners() {
                 <img
                   src={partner.logo}
                   alt={partner.name}
-                  className="max-h-16 max-w-[80%] object-contain grayscale filter transition-all group-hover:grayscale-0"
+                  className="max-h-16 max-w-[80%] object-contain"
                 />
               </div>
 
@@ -210,6 +217,15 @@ export function DashboardPartners() {
                     />
                     <LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Afficher sur le Site web ?
+                </label>
+                <div className="relative">
+                  <input type="checkbox" name="displayed" checked={selectedPartner?.displayed} />
                 </div>
               </div>
 

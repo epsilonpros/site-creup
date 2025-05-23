@@ -7,11 +7,12 @@ export interface Partner {
   kind: string
   description: string
   website?: string
+  displayed?: boolean
 }
 
 export const partnersApi = {
   getAll: async () => {
-    const response = await api.get('/api/partners?limit=100')
+    const response = await api.get('/api/partners?limit=100&displayed=true')
     return response.data
   },
 

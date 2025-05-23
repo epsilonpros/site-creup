@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, Clock, Filter, Image, Play, Printer, Sparkles } from 'lucide-react'
+import {
+  ArrowRight,
+  Clock,
+  Filter,
+  Image,
+  LayoutDashboard,
+  Play,
+  Printer,
+  Sparkles,
+} from 'lucide-react'
 import { Button } from '../components/Button'
 import type { CaseStudy, Stats } from '../types'
 import { projectsApi } from '../api'
@@ -8,9 +17,10 @@ import api from '../api/axios.ts'
 import { ProjectSkeleton, StatSkeleton } from '../components/Skeletons'
 
 const typeIcons = {
-  Design: Printer,
-  Photo: Image,
-  Vidéo: Play,
+  'Graphique design': Printer,
+  'Photo': Image,
+  'Vidéo': Play,
+  'Projet interne': LayoutDashboard,
 }
 
 export function PortfolioPage() {
@@ -41,9 +51,16 @@ export function PortfolioPage() {
 
   const categories = [
     { name: 'Tous', count: projects.length },
-    { name: 'Design', count: projects.filter((p) => p.category === 'Design').length },
+    {
+      name: 'Graphique design',
+      count: projects.filter((p) => p.category === 'Graphique design').length,
+    },
     { name: 'Photo', count: projects.filter((p) => p.category === 'Photo').length },
     { name: 'Vidéo', count: projects.filter((p) => p.category === 'Vidéo').length },
+    {
+      name: 'Projet interne',
+      count: projects.filter((p) => p.category === 'Projet interne').length,
+    },
   ]
 
   const filteredProjects =
@@ -158,7 +175,7 @@ export function PortfolioPage() {
                         <img
                           src={project.image}
                           alt={project.title}
-                          className="h-full w-full transform object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="max-h-56 w-full transform object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                         {ProjectTypeIcon && (
@@ -177,7 +194,9 @@ export function PortfolioPage() {
                         </div>
 
                         <h3 className="mb-2 text-xl font-bold text-gray-900">{project.title}</h3>
-                        <p className="mb-4 text-sm text-gray-600">{project.description}</p>
+                        <p className="mb-4 line-clamp-3 text-sm text-gray-600">
+                          {project.description}
+                        </p>
 
                         <Link to={`/portfolio/${project.id}`}>
                           <Button variant="primary" size="sm" icon={ArrowRight} className="w-full">

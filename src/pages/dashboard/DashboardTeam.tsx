@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import {
-  ArrowUpToLine,
   Camera,
+  ChartNoAxesCombined,
   Code,
-  Filter,
-  ChevronDown,
   Loader2,
   Palette,
   Pencil,
-  Plus,
-  Trash2,
-  BarChart3,
-  Target,
   PenTool,
+  Plus,
+  Target,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '../../components/Button'
 import { genericApi } from '../../api'
@@ -23,7 +20,7 @@ const iconOptions = [
   { value: 'Palette', label: 'Palette', icon: Palette },
   { value: 'Camera', label: 'Camera', icon: Camera },
   { value: 'Code', label: 'Code', icon: Code },
-  { value: 'BarChart3', label: 'Chart', icon: BarChart3 },
+  { value: 'ChartNoAxesCombined', label: 'Chart', icon: ChartNoAxesCombined },
   { value: 'PenTool', label: 'Design', icon: PenTool },
 ]
 
@@ -214,7 +211,6 @@ export function DashboardTeam() {
                   defaultValue={selectedMember?.description}
                   rows={3}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  required
                 />
               </div>
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Lightbulb, Pencil, Plus, Sparkles, Target, Trash2, Users } from 'lucide-react'
+import { Lightbulb, Loader2, Pencil, Plus, Sparkles, Target, Trash2, Users } from 'lucide-react'
 import { Button } from '../../components/Button'
 import type { Service } from '../../types'
 import { servicesApi } from '../../api/services'
@@ -66,7 +66,14 @@ export function DashboardServices() {
   }
 
   if (isLoading) {
-    return <div>Chargement...</div>
+    return (
+      <div className="flex h-[calc(100vh-6rem)] items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary-500" />
+          <p className="text-gray-600">Chargement des services...</p>
+        </div>
+      </div>
+    )
   }
 
   if (error) {
